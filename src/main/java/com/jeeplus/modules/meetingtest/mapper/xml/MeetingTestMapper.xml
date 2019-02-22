@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.meetingtest.mapper.MeetingTestMapper">
+    
+	<sql id="meetingTestColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.prolocutor AS "prolocutor",
+		a.conferree AS "conferree",
+		a.meeting_content AS "meetingContent",
+		a.meeting_startime AS "meetingStartTime",
+		a.meeting_closetime AS "meetingCloseTime",
+		a.meeting_welfare AS "meetingWelfare",
+		a.meeting_name AS "meetingName"
+	</sql>
+	
+	<sql id="meetingTestJoins">
+		
+	</sql>
+	
+    <resultMap type="MeetingTest" id="MeetingTestResult" autoMapping="true">
+    	<result column="meeting_content" property="meetingContent"   typeHandler="com.jeeplus.core.mapper.ConvertBlobTypeHandler"/>
+    </resultMap>
+    
+	<select id="get" resultMap="MeetingTestResult" >
+		SELECT 
+			<include refid="meetingTestColumns"/>
+		FROM meeting_test a
+		<include refid="meetingTestJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="MeetingTestResult" >
+		SELECT 
+			<include refid="meetingTestColumns"/>
+		FROM meeting_test a
+		<include refid="meetingTestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="meetingStartTime != null and meetingStartTime != ''">
+				AND a.meeting_startime = #{meetingStartTime}
+			</if>
+			<if test="meetingCloseTime != null and meetingCloseTime != ''">
+				AND a.meeting_closetime = #{meetingCloseTime}
+			</if>
+			<if test="meetingName != null and meetingName != ''">
+				AND a.meeting_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{meetingName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{meetingName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{meetingName},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultMap="MeetingTestResult" >
+		SELECT 
+			<include refid="meetingTestColumns"/>
+		FROM meeting_test a
+		<include refid="meetingTestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO meeting_test(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			prolocutor,
+			conferree,
+			meeting_content,
+			meeting_startime,
+			meeting_closetime,
+			meeting_welfare,
+			meeting_name
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{prolocutor},
+			#{conferree},
+			#{meetingContent},
+			#{meetingStartTime},
+			#{meetingCloseTime},
+			#{meetingWelfare},
+			#{meetingName}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE meeting_test SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			prolocutor = #{prolocutor},
+			conferree = #{conferree},
+			meeting_content = #{meetingContent},
+			meeting_startime = #{meetingStartTime},
+			meeting_closetime = #{meetingCloseTime},
+			meeting_welfare = #{meetingWelfare},
+			meeting_name = #{meetingName}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM meeting_test
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE meeting_test SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="MeetingTest" statementType="STATEMENT">
+		select * FROM meeting_test  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

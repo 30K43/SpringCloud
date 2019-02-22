@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.lhtest.mapper.LhtestMapper">
+    <!--数据库持久层的字段都在这里展示-->
+	<sql id="lhtestColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.course AS "course",
+		a.practicer AS "practicer.id",
+		a.practicetime AS "practicetime",
+		a.practicecontents AS "practicecontents",
+				
+				
+				
+				
+				
+				
+				
+				
+		practicer.name AS "practicer.name"
+	</sql>
+	<!--公用的sql语句 定义id引用-->
+	<sql id="lhtestJoins">
+		
+		LEFT JOIN sys_user practicer ON practicer.id = a.practicer
+	</sql>
+	<!--主要是返回的结果和类型-->
+    <resultMap type="Lhtest" id="LhtestResult" autoMapping="true">
+    	<result column="practicecontents" property="practicecontents"   typeHandler="com.jeeplus.core.mapper.ConvertBlobTypeHandler"/>
+    </resultMap>
+    <!--根据传入的id 将查询结果封装到resultMap中 返回-->
+	<select id="get" resultMap="LhtestResult" >
+		SELECT 
+			<include refid="lhtestColumns"/>
+		FROM lhtest a
+		<include refid="lhtestJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="LhtestResult" >
+		SELECT 
+			<include refid="lhtestColumns"/>
+		FROM lhtest a
+		<include refid="lhtestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="course != null and course != ''">
+				AND a.course LIKE 
+					<if test="dbName == 'oracle'">'%'||#{course}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{course}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{course},'%')</if>
+			</if>
+			<if test="practicer != null and practicer.id != null and practicer.id != ''">
+				AND a.practicer = #{practicer.id}
+			</if>
+			<if test="practicetime != null and practicetime != ''">
+				AND a.practicetime = #{practicetime}
+			</if>
+		</where>
+		--分页
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!--查询所有-->
+	<select id="findAllList" resultMap="LhtestResult" >
+		SELECT 
+			<include refid="lhtestColumns"/>
+		FROM lhtest a
+		--引用上面公用的sql
+		<include refid="lhtestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO lhtest(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			course,
+			practicer,
+			practicetime,
+			practicecontents
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{course},
+			#{practicer.id},
+			#{practicetime},
+			#{practicecontents}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE lhtest SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			course = #{course},
+			practicer = #{practicer.id},
+			practicetime = #{practicetime},
+			practicecontents = #{practicecontents}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM lhtest
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除 非删除的数据-->
+	<update id="deleteByLogic">
+		UPDATE lhtest SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Lhtest" statementType="STATEMENT">
+		select * FROM lhtest  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>
